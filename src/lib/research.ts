@@ -7,8 +7,9 @@ export async function researchProspect(params: {
   prospectName: string;
   company?: string;
   contactEmail?: string;
+  contactPhone?: string;
 }): Promise<string> {
-  const { prospectName, company, contactEmail } = params;
+  const { prospectName, company, contactEmail, contactPhone } = params;
 
   // In production: integrate with Clearbit, LinkedIn, news APIs, etc.
   // For hackathon: use Claude to synthesize research from name/company if provided
@@ -20,6 +21,10 @@ export async function researchProspect(params: {
   if (contactEmail) {
     const domain = contactEmail.split("@")[1];
     if (domain) parts.push(`Email domain: ${domain} (possible company signal)`);
+  }
+  if (contactPhone) {
+    const digits = contactPhone.replace(/\D/g, "");
+    if (digits.length >= 10) parts.push(`Phone: ${contactPhone} (country/region signal)`);
   }
 
   if (parts.length > 0) {

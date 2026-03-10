@@ -51,17 +51,12 @@ export async function sendWhatsAppTemplateMessage(
   const { client, from } = getTwilioClient();
   const toAddr = toWhatsAppAddress(to);
 
-  const payload: Record<string, unknown> = {
+  await client.messages.create({
     from,
     to: toAddr,
     contentSid,
-  };
-
-  if (Object.keys(variables).length > 0) {
-    payload.contentVariables = JSON.stringify(variables);
-  }
-
-  await client.messages.create(payload);
+    ...(Object.keys(variables).length > 0 && { contentVariables: JSON.stringify(variables) }),
+  } as { from: string; to: string; contentSid: string; contentVariables?: string });
 }
 
 export async function markAsRead(_messageId: string): Promise<void> {
