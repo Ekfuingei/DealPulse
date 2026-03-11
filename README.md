@@ -167,11 +167,33 @@ DealPulse/
 
 ## Deployment (Vercel)
 
-1. Push to GitHub
-2. Import project in [Vercel](https://vercel.com)
-3. Add all environment variables from `.env.local.example`
-4. Set `NEXT_PUBLIC_APP_URL` to your Vercel URL (e.g. `https://dealpulse.vercel.app`)
-5. Update Twilio webhook to `https://your-app.vercel.app/api/whatsapp/webhook`
+DealPulse deploys as a single app — **frontend and API routes run together** on Vercel.
+
+### Option A: Deploy via Vercel Dashboard
+
+1. Push your code to GitHub
+2. Go to [vercel.com](https://vercel.com) → **Add New** → **Project**
+3. Import `Ekfuingei/DealPulse` from GitHub
+4. **Environment Variables** — Add each from `.env.local.example`:
+   - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+   - `ANTHROPIC_API_KEY`
+   - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_NUMBER`
+   - `HUBSPOT_ACCESS_TOKEN`
+   - `AIRIA_API_KEY`, `AIRIA_AGENT_URL`, `AIRIA_PIPELINE_ID`
+   - `WHATSAPP_VERIFY_TOKEN`, `MESSENGER_VERIFY_TOKEN`, `INSTAGRAM_VERIFY_TOKEN`
+   - `AGENT_SEND_DIRECTLY` (optional, default: `false`)
+5. **Deploy** — Vercel will build and deploy
+6. After deploy, set `NEXT_PUBLIC_APP_URL` to your Vercel URL (e.g. `https://dealpulse.vercel.app`)
+7. Update Twilio webhook to `https://your-app.vercel.app/api/whatsapp/webhook`
+
+### Option B: Deploy via CLI
+
+```bash
+npm i -g vercel
+vercel
+```
+
+Follow the prompts, then add environment variables in the Vercel dashboard.
 
 ---
 

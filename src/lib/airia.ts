@@ -19,28 +19,34 @@ export async function runAiriaAgent(input: AiriaRunInput): Promise<string> {
   const agentUrl = process.env.AIRIA_AGENT_URL;
   const pipelineId = process.env.AIRIA_PIPELINE_ID;
 
-  const url = agentUrl || (pipelineId ? `${AIRIA_BASE}/v1/agents/${pipelineId}/run` : null);
+  const url = agentUrl || (pipelineId ? `${AIRIA_BASE}/v2/PipelineExecution/${pipelineId}` : null);
 
   if (!apiKey || !url) {
     throw new Error("Airia not configured: set AIRIA_API_KEY and AIRIA_AGENT_URL or AIRIA_PIPELINE_ID");
   }
 
+  const userInput = [
+    `Prospect: ${input.prospectName}`,
+    `Channel: ${input.channel}`,
+    input.company ? `Company: ${input.company}` : null,
+    input.research ? `\nResearch/context:\n${input.research}` : null,
+    input.previousMessages?.length
+      ? `\nPrevious message(s) from prospect:\n${input.previousMessages.join("\n---\n")}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
   const payload = {
-    input: JSON.stringify(input),
-    variables: {
-      prospectName: input.prospectName,
-      company: input.company ?? "",
-      channel: input.channel,
-      research: input.research ?? "",
-      previousMessages: input.previousMessages?.join("\n---\n") ?? "",
-    },
+    userInput,
+    asyncOutput: false,
   };
 
   const res = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-API-Key": apiKey,
+      "X-API-KEY": apiKey,
     },
     body: JSON.stringify(payload),
   });
