@@ -47,14 +47,31 @@ export async function POST(
 
     if (activity.channel === "whatsapp") {
       const meta = (activity.metadata ?? {}) as Record<string, string>;
-      const recipient = meta.recipientPhone;
+      let recipient = meta.recipientPhone;
+      if (!recipient && activity.deal_id) {
+        const { data: deal } = await supabase
+          .from("deals")
+          .select("contact_phone")
+          .eq("id", activity.deal_id)
+          .single();
+        recipient = deal?.contact_phone ?? undefined;
+      }
       if (!recipient) {
         return NextResponse.json(
           { error: "Missing recipient for WhatsApp" },
           { status: 400 }
         );
       }
-      await sendWhatsAppMessage(recipient, messageToSend);
+      try {
+        await sendWhatsAppMessage(recipient, messageToSend);
+      } catch (twilioErr) {
+        const msg = twilioErr instanceof Error ? twilioErr.message : "Twilio send failed";
+        console.error("WhatsApp send failed:", twilioErr);
+        return NextResponse.json(
+          { error: "Failed to send via WhatsApp", details: msg },
+          { status: 500 }
+        );
+      }
     }
     // Messenger/Instagram: approve marks as sent but actual send requires Meta Graph API integration
 
@@ -86,8 +103,9 @@ export async function POST(
     return NextResponse.json({ ok: true, sent: true });
   } catch (err) {
     console.error("Approve error:", err);
+    const msg = err instanceof Error ? err.message : "Approval failed";
     return NextResponse.json(
-      { error: "Approval failed" },
+      { error: "Approval failed", details: msg },
       { status: 500 }
     );
   }

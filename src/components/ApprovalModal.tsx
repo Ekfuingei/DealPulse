@@ -11,6 +11,7 @@ interface ApprovalModalProps {
   channel?: string;
   onApprove: (editedMessage?: string) => void;
   isLoading?: boolean;
+  error?: string | null;
 }
 
 export function ApprovalModal({
@@ -21,6 +22,7 @@ export function ApprovalModal({
   channel,
   onApprove,
   isLoading,
+  error,
 }: ApprovalModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedMessage, setEditedMessage] = useState(message);
@@ -56,6 +58,11 @@ export function ApprovalModal({
             To: <span className="text-white">{prospect}</span>
             {channel && <span className="ml-2">via {channel}</span>}
           </p>
+        )}
+        {error && (
+          <div className="mb-4 rounded-lg bg-red-950/50 border border-red-800 px-4 py-3 text-sm text-red-400">
+            {error}
+          </div>
         )}
         {isEditing ? (
           <textarea

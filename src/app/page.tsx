@@ -36,6 +36,7 @@ export default function DashboardPage() {
   const [syncing, setSyncing] = useState(false);
   const [pendingApproval, setPendingApproval] = useState<AgentActivityWithMeta | null>(null);
   const [approving, setApproving] = useState(false);
+  const [approveError, setApproveError] = useState<string | null>(null);
 
   const refreshDeals = useCallback(() => {
     return fetch("/api/deals")
@@ -95,23 +96,30 @@ export default function DashboardPage() {
   };
 
   const handleApproveRequest = (activity: AgentActivityWithMeta) => {
+    setApproveError(null);
     setPendingApproval(activity);
   };
 
   const handleApprove = async (editedMessage?: string) => {
     if (!pendingApproval) return;
     setApproving(true);
+    setApproveError(null);
     try {
       const res = await fetch(`/api/agent-activities/${pendingApproval.id}/approve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: editedMessage ?? pendingApproval.content }),
       });
+      const data = await res.json();
       if (res.ok) {
         setPendingApproval(null);
         await refreshActivities();
         await refreshDeals();
+      } else {
+        setApproveError(data?.error || data?.details || `Failed (${res.status})`);
       }
+    } catch {
+      setApproveError("Network error");
     } finally {
       setApproving(false);
     }
@@ -222,12 +230,16 @@ export default function DashboardPage() {
 
       <ApprovalModal
         isOpen={!!pendingApproval}
-        onClose={() => setPendingApproval(null)}
+        onClose={() => {
+          setPendingApproval(null);
+          setApproveError(null);
+        }}
         message={pendingApproval?.content ?? ""}
         prospect={prospectLabel}
         channel={pendingApproval?.channel}
         onApprove={(edited) => handleApprove(edited)}
         isLoading={approving}
+        error={approveError}
       />
     </div>
   );
