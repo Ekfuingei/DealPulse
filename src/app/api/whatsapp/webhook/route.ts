@@ -55,8 +55,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    await fetch(`${appUrl}/api/agent/run`, {
+    const appUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+    const res = await fetch(`${appUrl}/api/agent/run`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -66,6 +68,9 @@ export async function POST(req: NextRequest) {
         messageId,
       }),
     });
+    if (!res.ok) {
+      console.error("Agent run failed:", res.status, await res.text());
+    }
 
     return NextResponse.json({ ok: true });
   } catch {

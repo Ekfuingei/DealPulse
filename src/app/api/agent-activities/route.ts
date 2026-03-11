@@ -30,7 +30,9 @@ export async function GET() {
       metadata: a.metadata,
     }));
 
-    return NextResponse.json(activities);
+    return NextResponse.json(activities, {
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
+    });
   } catch (err) {
     console.error("Agent activities fetch error:", err);
     return NextResponse.json(
