@@ -16,11 +16,23 @@ async function logActivity(params: {
 }) {
   const supabase = supabaseAdmin;
   if (!supabase) return;
-  const { metadata, ...rest } = params;
-  const { data } = await supabase.from("agent_activities").insert({
-    ...rest,
-    metadata: metadata ?? null,
-  }).select("id").single();
+  const { dealId, metadata, ...rest } = params;
+  const { data, error } = await supabase
+    .from("agent_activities")
+    .insert({
+      deal_id: dealId ?? null,
+      type: rest.type,
+      channel: rest.channel,
+      content: rest.content ?? null,
+      status: rest.status,
+      metadata: metadata ?? null,
+    })
+    .select("id")
+    .single();
+  if (error) {
+    console.error("Agent activity insert failed:", error);
+    return;
+  }
   return data?.id;
 }
 
@@ -147,6 +159,14 @@ export async function POST(req: NextRequest) {
           content: draft,
           status: "pending",
           metadata: canSendDirectly ? { recipientPhone: from } : { recipientId: from },
+        });
+      } else {
+        await logActivity({
+          dealId,
+          type: "logged",
+          channel,
+          content: "Agent processed incoming message",
+          status: "sent",
         });
       }
 
