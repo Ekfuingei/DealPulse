@@ -100,15 +100,26 @@ export async function POST(req: NextRequest) {
 
     const supportedChannels = ["whatsapp", "messenger", "instagram", "email"];
     if (supportedChannels.includes(channel)) {
-      const prospectName = String(from);
+      const senderId = String(from);
       const research = await researchProspect({
-        prospectName,
-        contactPhone: prospectName,
+        prospectName: senderId,
+        contactPhone: senderId,
       });
 
       let dealId = providedDealId;
       if (!dealId) {
-        dealId = await createOrGetDealFromConversation(channel, prospectName);
+        dealId = await createOrGetDealFromConversation(channel, senderId);
+      }
+
+      // Use contact_name from deal when available, else sender ID (e.g. whatsapp:+237...)
+      let prospectName = senderId;
+      if (dealId && supabaseAdmin) {
+        const { data: deal } = await supabaseAdmin
+          .from("deals")
+          .select("contact_name")
+          .eq("id", dealId)
+          .single();
+        if (deal?.contact_name) prospectName = deal.contact_name;
       }
 
       const draftChannel = channel === "instagram" ? "messenger" : channel;
@@ -119,7 +130,7 @@ export async function POST(req: NextRequest) {
             prospectName,
             channel,
             research,
-            previousMessages: text ? [text] : undefined,
+            previousMessages: text?.trim() ? [text.trim()] : undefined,
           });
         } catch (err) {
           console.warn("Airia failed, falling back to Claude:", err);

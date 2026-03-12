@@ -25,20 +25,34 @@ export async function runAiriaAgent(input: AiriaRunInput): Promise<string> {
     throw new Error("Airia not configured: set AIRIA_API_KEY and AIRIA_AGENT_URL or AIRIA_PIPELINE_ID");
   }
 
+  // Send both userInput (fallback) and Input Variables for Airia agents using {{prospectName}}, {{channel}}, etc.
+  const prospectName = input.prospectName || "Unknown";
+  const channel = input.channel;
+  const research = input.research?.trim()
+    ? input.research
+    : "No additional data. Use conversation context for personalization.";
+  const previousMessages = input.previousMessages?.length
+    ? input.previousMessages.join("\n---\n")
+    : "(First contact — no prior messages)";
+
   const userInput = [
-    `Prospect: ${input.prospectName}`,
-    `Channel: ${input.channel}`,
+    `Prospect: ${prospectName}`,
+    `Channel: ${channel}`,
     input.company ? `Company: ${input.company}` : null,
-    input.research ? `\nResearch/context:\n${input.research}` : null,
-    input.previousMessages?.length
-      ? `\nPrevious message(s) from prospect:\n${input.previousMessages.join("\n---\n")}`
-      : null,
+    `\nResearch/context:\n${research}`,
+    `\nPrevious message(s) from prospect:\n${previousMessages}`,
   ]
     .filter(Boolean)
     .join("\n");
 
   const payload = {
     userInput,
+    // Input Variables — map to {{prospectName}}, {{channel}}, {{research}}, {{previousMessages}} in Airia
+    prospectName,
+    company: input.company ?? "",
+    channel,
+    research,
+    previousMessages,
     asyncOutput: false,
   };
 

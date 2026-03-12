@@ -1,6 +1,6 @@
 # Airia Agent Configuration for DealPulse
 
-DealPulse uses the **Airia v2 API** and sends context as `userInput`. Configure your agent to receive and use it.
+DealPulse uses the **Airia v2 API** and sends context as both `userInput` and **Input Variables** (prospectName, company, channel, research, previousMessages).
 
 ---
 
@@ -10,12 +10,19 @@ DealPulse sends:
 
 ```json
 {
-  "userInput": "Prospect: whatsapp:+237655536083\nChannel: whatsapp\n\nResearch/context:\n...\n\nPrevious message(s) from prospect:\nHey, interested in DealPulse...",
+  "userInput": "Prospect: whatsapp:+237...\nChannel: whatsapp\n\nResearch/context:\n...\n\nPrevious message(s)...",
+  "prospectName": "whatsapp:+237655536083",
+  "company": "",
+  "channel": "whatsapp",
+  "research": "Prospect identifier: whatsapp:+237... Phone: ... — likely Cameroon",
+  "previousMessages": "Hey, interested in DealPulse for our team!",
   "asyncOutput": false
 }
 ```
 
 **Headers:** `X-API-KEY`, `Content-Type: application/json`
+
+Your agent's **Input Variables** (prospectName, company, channel, research, previousMessages) are populated from this payload.
 
 ---
 
@@ -26,8 +33,6 @@ Minimal flow:
 ```
 [Start] → [AI Model] → [Output]
 ```
-
-The **user input** from the API call is passed to the agent automatically.
 
 ---
 
@@ -105,5 +110,6 @@ The model should return a draft message only.
 | Issue | Fix |
 |-------|-----|
 | Agent returns empty | Ensure "Always include user input" is ON |
+| Agent says "I need prospectName, research, etc." | DealPulse now sends Input Variables (prospectName, channel, research, previousMessages) in the API payload. Ensure your Airia agent has these variables created under Input Variables, and that variable names match exactly (e.g. `previousMessages`, not `previousMessagesGENERATION`). |
 | 401/403 | Check AIRIA_API_KEY and X-API-KEY header |
 | Fallback to Claude | Check Airia execution logs; verify API URL is v2 |
